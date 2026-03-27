@@ -22,4 +22,5 @@ export type {
   SessionIdSegmentConfig,
   EnvSegmentConfig,
   JsonFileSegmentConfig,
+  SegmentData,
 } from "./renderer";

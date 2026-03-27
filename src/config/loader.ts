@@ -33,7 +33,7 @@ export interface LineConfig {
     version?: VersionSegmentConfig;
     sessionId?: SessionIdSegmentConfig;
     env?: EnvSegmentConfig;
-    jsonFile?: JsonFileSegmentConfig;
+    jsonFile?: JsonFileSegmentConfig | JsonFileSegmentConfig[];
   };
 }
 
@@ -293,6 +293,13 @@ export function loadConfig(
 
   const cliOverrides = parseCLIOverrides(args);
   config = deepMerge(config, cliOverrides);
+
+  // Normalize jsonFile: ensure each line's jsonFile is always an array
+  for (const line of config.display?.lines ?? []) {
+    if (line.segments.jsonFile && !Array.isArray(line.segments.jsonFile)) {
+      (line.segments as any).jsonFile = [line.segments.jsonFile];
+    }
+  }
 
   return config;
 }

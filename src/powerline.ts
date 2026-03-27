@@ -33,6 +33,7 @@ import {
   SessionIdSegmentConfig,
   EnvSegmentConfig,
   JsonFileSegmentConfig,
+  SegmentData,
 } from "./segments";
 import { BlockProvider, BlockInfo } from "./segments/block";
 import { TodayProvider, TodayInfo } from "./segments/today";
@@ -126,9 +127,10 @@ export class PowerlineRenderer {
   }
 
   private needsSegmentInfo(segmentType: keyof LineConfig["segments"]): boolean {
-    return this.config.display.lines.some(
-      (line) => line.segments[segmentType]?.enabled,
-    );
+    return this.config.display.lines.some((line) => {
+      const val = line.segments[segmentType];
+      return Array.isArray(val) ? val.some((c) => c.enabled) : val?.enabled;
+    });
   }
 
   async generateStatusline(hookData: ClaudeHookData): Promise<string> {
@@ -204,14 +206,10 @@ export class PowerlineRenderer {
 
     for (const lineConfig of this.config.display.lines) {
       const segments = Object.entries(lineConfig.segments)
-        .filter(
-          ([_, config]: [string, AnySegmentConfig | undefined]) =>
-            config?.enabled,
+        .filter(([_, config]: [string, any]) =>
+          Array.isArray(config) ? config.some((c: any) => c.enabled) : config?.enabled,
         )
-        .map(([type, config]: [string, AnySegmentConfig]) => ({
-          type,
-          config,
-        }));
+        .map(([type, config]: [string, any]) => ({ type, config }));
 
       const renderedSegments: RenderedSegment[] = [];
       for (const segment of segments) {
@@ -228,12 +226,15 @@ export class PowerlineRenderer {
         );
 
         if (segmentData) {
-          renderedSegments.push({
-            type: segment.type,
-            text: segmentData.text,
-            bgColor: segmentData.bgColor,
-            fgColor: segmentData.fgColor,
-          });
+          const dataArray = Array.isArray(segmentData) ? segmentData : [segmentData];
+          for (const data of dataArray) {
+            renderedSegments.push({
+              type: segment.type,
+              text: data.text,
+              bgColor: data.bgColor,
+              fgColor: data.fgColor,
+            });
+          }
         }
       }
 
@@ -416,11 +417,10 @@ export class PowerlineRenderer {
     const currentDir = hookData.workspace?.current_dir || hookData.cwd || "/";
 
     const segments = Object.entries(lineConfig.segments)
-      .filter(
-        ([_, config]: [string, AnySegmentConfig | undefined]) =>
-          config?.enabled,
+      .filter(([_, config]: [string, any]) =>
+        Array.isArray(config) ? config.some((c: any) => c.enabled) : config?.enabled,
       )
-      .map(([type, config]: [string, AnySegmentConfig]) => ({ type, config }));
+      .map(([type, config]: [string, any]) => ({ type, config }));
 
     const renderedSegments: RenderedSegment[] = [];
     for (const segment of segments) {
@@ -437,12 +437,15 @@ export class PowerlineRenderer {
       );
 
       if (segmentData) {
-        renderedSegments.push({
-          type: segment.type,
-          text: segmentData.text,
-          bgColor: segmentData.bgColor,
-          fgColor: segmentData.fgColor,
-        });
+        const dataArray = Array.isArray(segmentData) ? segmentData : [segmentData];
+        for (const data of dataArray) {
+          renderedSegments.push({
+            type: segment.type,
+            text: data.text,
+            bgColor: data.bgColor,
+            fgColor: data.fgColor,
+          });
+        }
       }
     }
 
@@ -551,10 +554,13 @@ export class PowerlineRenderer {
     }
 
     if (segment.type === "jsonFile") {
-      return this.segmentRenderer.renderJsonFile(
-        colors,
-        segment.config as JsonFileSegmentConfig,
-      );
+      const configs = Array.isArray(segment.config)
+        ? (segment.config as JsonFileSegmentConfig[])
+        : [segment.config as JsonFileSegmentConfig];
+      const results = configs
+        .map((cfg) => this.segmentRenderer.renderJsonFile(colors, cfg))
+        .filter((r): r is SegmentData => r !== null);
+      return results.length > 0 ? results : null;
     }
 
     return null;
