@@ -5,7 +5,7 @@ import {
   loadEntriesFromProjects,
   type ClaudeHookData,
 } from "../src/utils/claude";
-import { mkdirSync, rmSync } from "fs";
+import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 
@@ -563,6 +563,159 @@ describe("Segment Time Logic", () => {
       const pctOnly = renderer.renderContext(mkContext(50), colors, { enabled: true, displayStyle: "blocks", showPercentageOnly: true });
       expect(pctOnly!.text).toContain("50%");
       expect(pctOnly!.text).not.toContain((100000).toLocaleString());
+    });
+  });
+});
+
+describe("renderJsonFile", () => {
+  const config = { theme: "dark", display: { style: "capsule" as const, lines: [] } } as any;
+  const symbols = {} as any;
+  const colors = {
+    jsonFileBg: "\x1b[48;2;58;58;74m",
+    jsonFileFg: "\x1b[38;2;192;192;224m",
+  } as any;
+
+  let renderer: SegmentRenderer;
+  let tmpFile: string;
+
+  beforeEach(() => {
+    renderer = new SegmentRenderer(config, symbols);
+    tmpFile = join(tmpdir(), `usage-test-${Date.now()}.json`);
+  });
+
+  afterEach(() => {
+    try { rmSync(tmpFile); } catch {}
+  });
+
+  it("returns null when file does not exist", () => {
+    const result = renderer.renderJsonFile(colors, {
+      enabled: true,
+      path: "/nonexistent/usage.json",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when file contains invalid JSON", () => {
+    writeFileSync(tmpFile, "not json");
+    const result = renderer.renderJsonFile(colors, {
+      enabled: true,
+      path: tmpFile,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when dot-notation field path is missing", () => {
+    writeFileSync(tmpFile, JSON.stringify({ five_hour: {} }));
+    const result = renderer.renderJsonFile(colors, {
+      enabled: true,
+      path: tmpFile,
+      field: "five_hour.utilization",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("extracts nested value via dot-notation", () => {
+    writeFileSync(tmpFile, JSON.stringify({ five_hour: { utilization: 42 } }));
+    const result = renderer.renderJsonFile(colors, {
+      enabled: true,
+      path: tmpFile,
+      field: "five_hour.utilization",
+    });
+    expect(result).not.toBeNull();
+    expect(result!.text).toContain("42");
+  });
+
+  it("formats numbers with decimalPlaces", () => {
+    writeFileSync(tmpFile, JSON.stringify({ val: 3.14159 }));
+    const result = renderer.renderJsonFile(colors, {
+      enabled: true,
+      path: tmpFile,
+      field: "val",
+      decimalPlaces: 0,
+    });
+    expect(result!.text).toContain("3");
+    expect(result!.text).not.toContain(".");
+  });
+
+  it("uses jsonFileBg and jsonFileFg colors", () => {
+    writeFileSync(tmpFile, JSON.stringify({ val: "hello" }));
+    const result = renderer.renderJsonFile(colors, {
+      enabled: true,
+      path: tmpFile,
+      field: "val",
+    });
+    expect(result!.bgColor).toBe(colors.jsonFileBg);
+    expect(result!.fgColor).toBe(colors.jsonFileFg);
+  });
+
+  describe("fieldType: timeUntil", () => {
+    it("formats countdown as Xh Ym when more than 1 hour remains", () => {
+      const future = new Date(Date.now() + 4 * 60 * 60 * 1000 + 12 * 60 * 1000);
+      writeFileSync(tmpFile, JSON.stringify({ resets_at: future.toISOString() }));
+      const result = renderer.renderJsonFile(colors, {
+        enabled: true,
+        path: tmpFile,
+        field: "resets_at",
+        fieldType: "timeUntil",
+      });
+      expect(result!.text).toMatch(/\d+h \d+m/);
+    });
+
+    it("formats countdown as Xm when less than 1 hour remains", () => {
+      const future = new Date(Date.now() + 45 * 60 * 1000);
+      writeFileSync(tmpFile, JSON.stringify({ resets_at: future.toISOString() }));
+      const result = renderer.renderJsonFile(colors, {
+        enabled: true,
+        path: tmpFile,
+        field: "resets_at",
+        fieldType: "timeUntil",
+      });
+      expect(result!.text).toMatch(/^\d+m$/);
+    });
+
+    it("returns 'now' when reset time is in the past", () => {
+      const past = new Date(Date.now() - 60 * 1000);
+      writeFileSync(tmpFile, JSON.stringify({ resets_at: past.toISOString() }));
+      const result = renderer.renderJsonFile(colors, {
+        enabled: true,
+        path: tmpFile,
+        field: "resets_at",
+        fieldType: "timeUntil",
+      });
+      expect(result!.text).toContain("now");
+    });
+
+    it("returns null for an unparseable timestamp string", () => {
+      writeFileSync(tmpFile, JSON.stringify({ resets_at: "not-a-date" }));
+      const result = renderer.renderJsonFile(colors, {
+        enabled: true,
+        path: tmpFile,
+        field: "resets_at",
+        fieldType: "timeUntil",
+      });
+      expect(result).toBeNull();
+    });
+
+    it("returns null when field value is a number (not a string)", () => {
+      writeFileSync(tmpFile, JSON.stringify({ resets_at: 1234567890 }));
+      const result = renderer.renderJsonFile(colors, {
+        enabled: true,
+        path: tmpFile,
+        field: "resets_at",
+        fieldType: "timeUntil",
+      });
+      expect(result).toBeNull();
+    });
+
+    it("returns null when field value is null", () => {
+      writeFileSync(tmpFile, JSON.stringify({ resets_at: null }));
+      const result = renderer.renderJsonFile(colors, {
+        enabled: true,
+        path: tmpFile,
+        field: "resets_at",
+        fieldType: "timeUntil",
+      });
+      expect(result).toBeNull();
     });
   });
 });

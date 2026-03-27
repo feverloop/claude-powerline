@@ -1,4 +1,6 @@
 import path from "node:path";
+import fs from "node:fs";
+import os from "node:os";
 import type { ClaudeHookData } from "../utils/claude";
 import type { PowerlineColors } from "../themes";
 import type { PowerlineConfig } from "../config/loader";
@@ -80,6 +82,15 @@ export interface EnvSegmentConfig extends SegmentConfig {
   prefix?: string;
 }
 
+export interface JsonFileSegmentConfig extends SegmentConfig {
+  path: string;
+  field?: string;
+  prefix?: string;
+  suffix?: string;
+  decimalPlaces?: number;
+  fieldType?: "timeUntil";
+}
+
 export type AnySegmentConfig =
   | SegmentConfig
   | DirectorySegmentConfig
@@ -92,7 +103,8 @@ export type AnySegmentConfig =
   | TodaySegmentConfig
   | VersionSegmentConfig
   | SessionIdSegmentConfig
-  | EnvSegmentConfig;
+  | EnvSegmentConfig
+  | JsonFileSegmentConfig;
 
 import {
   formatCost,
@@ -848,5 +860,64 @@ export class SegmentRenderer {
       ? `${this.symbols.env} ${prefix}: ${value}`
       : `${this.symbols.env} ${value}`;
     return { text, bgColor: colors.envBg, fgColor: colors.envFg };
+  }
+
+  renderJsonFile(
+    colors: PowerlineColors,
+    config: JsonFileSegmentConfig,
+  ): SegmentData | null {
+    try {
+      const filePath = config.path.startsWith("~")
+        ? config.path.replace("~", os.homedir())
+        : config.path;
+
+      const content = fs.readFileSync(filePath, "utf-8");
+      const data = JSON.parse(content) as Record<string, unknown>;
+
+      let value: unknown = data;
+      if (config.field) {
+        for (const key of config.field.split(".")) {
+          if (value === null || typeof value !== "object") {
+            return null;
+          }
+          value = (value as Record<string, unknown>)[key];
+        }
+      }
+
+      if (value === null || value === undefined) return null;
+
+      if (config.fieldType === "timeUntil") {
+        if (typeof value !== "string") return null;
+        const target = new Date(value);
+        if (isNaN(target.getTime())) return null;
+        const msLeft = target.getTime() - Date.now();
+        if (msLeft <= 0) {
+          const text = `${config.prefix ?? ""}now${config.suffix ?? ""}`;
+          return { text, bgColor: colors.jsonFileBg, fgColor: colors.jsonFileFg };
+        }
+        const totalMinutes = Math.floor(msLeft / 60000);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        const countdown = hours >= 1 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        const text = `${config.prefix ?? ""}${countdown}${config.suffix ?? ""}`;
+        return { text, bgColor: colors.jsonFileBg, fgColor: colors.jsonFileFg };
+      }
+
+      let displayValue: string;
+      if (typeof value === "number" && config.decimalPlaces !== undefined) {
+        displayValue = value.toFixed(config.decimalPlaces);
+      } else {
+        displayValue = String(value);
+      }
+
+      const parts: string[] = [];
+      if (config.prefix) parts.push(config.prefix);
+      parts.push(displayValue);
+      if (config.suffix) parts.push(config.suffix);
+
+      return { text: parts.join(""), bgColor: colors.jsonFileBg, fgColor: colors.jsonFileFg };
+    } catch {
+      return null;
+    }
   }
 }

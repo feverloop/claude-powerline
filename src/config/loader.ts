@@ -16,6 +16,7 @@ import type {
   VersionSegmentConfig,
   SessionIdSegmentConfig,
   EnvSegmentConfig,
+  JsonFileSegmentConfig,
 } from "../segments/renderer";
 
 export interface LineConfig {
@@ -32,6 +33,7 @@ export interface LineConfig {
     version?: VersionSegmentConfig;
     sessionId?: SessionIdSegmentConfig;
     env?: EnvSegmentConfig;
+    jsonFile?: JsonFileSegmentConfig;
   };
 }
 
