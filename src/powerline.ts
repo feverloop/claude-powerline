@@ -32,6 +32,7 @@ import {
   VersionSegmentConfig,
   SessionIdSegmentConfig,
   EnvSegmentConfig,
+  JsonFileSegmentConfig,
 } from "./segments";
 import { BlockProvider, BlockInfo } from "./segments/block";
 import { TodayProvider, TodayInfo } from "./segments/today";
@@ -549,6 +550,13 @@ export class PowerlineRenderer {
       );
     }
 
+    if (segment.type === "jsonFile") {
+      return this.segmentRenderer.renderJsonFile(
+        colors,
+        segment.config as JsonFileSegmentConfig,
+      );
+    }
+
     return null;
   }
 
@@ -765,6 +773,7 @@ export class PowerlineRenderer {
     const metrics = getSegmentColors("metrics");
     const version = getSegmentColors("version");
     const env = getSegmentColors("env");
+    const jsonFile = getSegmentColors("jsonFile");
 
     return {
       reset: colorSupport === "none" ? "" : RESET_CODE,
@@ -794,6 +803,8 @@ export class PowerlineRenderer {
       versionFg: version.fg,
       envBg: env.bg,
       envFg: env.fg,
+      jsonFileBg: jsonFile.bg,
+      jsonFileFg: jsonFile.fg,
     };
   }
 
@@ -825,6 +836,8 @@ export class PowerlineRenderer {
         return colors.versionBg;
       case "env":
         return colors.envBg;
+      case "jsonFile":
+        return colors.jsonFileBg;
       default:
         return colors.modeBg;
     }

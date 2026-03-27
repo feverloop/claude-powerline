@@ -14,6 +14,7 @@ export const lightTheme: ColorTheme = {
   metrics: { bg: "#6b7280", fg: "#ffffff" },
   version: { bg: "#8b7dd8", fg: "#ffffff" },
   env: { bg: "#d45dbf", fg: "#ffffff" },
+  jsonFile: { bg: "#3a3a4a", fg: "#c0c0e0" },
 };
 
 export const lightAnsi256Theme: ColorTheme = {
@@ -30,6 +31,7 @@ export const lightAnsi256Theme: ColorTheme = {
   metrics: { bg: "#767676", fg: "#ffffff" },
   version: { bg: "#af87ff", fg: "#ffffff" },
   env: { bg: "#d787af", fg: "#ffffff" },
+  jsonFile: { bg: "#3a3a4a", fg: "#c0c0e0" },
 };
 
 export const lightAnsiTheme: ColorTheme = {
@@ -46,4 +48,5 @@ export const lightAnsiTheme: ColorTheme = {
   metrics: { bg: "#767676", fg: "#ffffff" },
   version: { bg: "#af87ff", fg: "#ffffff" },
   env: { bg: "#d787af", fg: "#ffffff" },
+  jsonFile: { bg: "#3a3a4a", fg: "#c0c0e0" },
 };
