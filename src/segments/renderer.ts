@@ -330,7 +330,7 @@ export class SegmentRenderer {
     const contextSize = formatContextSize(
       hookData.context_window?.context_window_size ?? null,
     );
-    const label = contextSize ? `${modelName}(${contextSize})` : modelName;
+    const label = contextSize ? `${modelName} (${contextSize})` : modelName;
 
     return {
       text: `${this.symbols.model} ${label}`,
