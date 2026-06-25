@@ -5,7 +5,6 @@ import type { ClaudeHookData } from "../utils/claude";
 import type { PowerlineColors } from "../themes";
 import type { PowerlineConfig } from "../config/loader";
 import type { BlockInfo } from "./block";
-import { formatModelName, abbreviateFishStyle } from "../utils/formatters";
 
 export interface SegmentConfig {
   enabled: boolean;
@@ -107,6 +106,9 @@ export type AnySegmentConfig =
   | JsonFileSegmentConfig;
 
 import {
+  formatModelName,
+  formatContextSize,
+  abbreviateFishStyle,
   formatCost,
   formatTokens,
   formatTokenBreakdown,
@@ -325,9 +327,13 @@ export class SegmentRenderer {
   renderModel(hookData: ClaudeHookData, colors: PowerlineColors): SegmentData {
     const rawName = hookData.model?.display_name || "Claude";
     const modelName = formatModelName(rawName);
+    const contextSize = formatContextSize(
+      hookData.context_window?.context_window_size ?? null,
+    );
+    const label = contextSize ? `${modelName}(${contextSize})` : modelName;
 
     return {
-      text: `${this.symbols.model} ${modelName}`,
+      text: `${this.symbols.model} ${label}`,
       bgColor: colors.modelBg,
       fgColor: colors.modelFg,
     };

@@ -11,15 +11,15 @@ export function formatCost(cost: number | null): string {
   return `$${cost.toFixed(2)}`;
 }
 
+function abbreviate(n: number, decimals: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(decimals)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(decimals)}K`;
+  return String(n);
+}
+
 export function formatTokens(tokens: number | null): string {
-  if (tokens === null) return "0 tokens";
-  if (tokens === 0) return "0 tokens";
-  if (tokens >= 1_000_000) {
-    return `${(tokens / 1_000_000).toFixed(1)}M tokens`;
-  } else if (tokens >= 1_000) {
-    return `${(tokens / 1_000).toFixed(1)}K tokens`;
-  }
-  return `${tokens} tokens`;
+  if (tokens === null || tokens === 0) return "0 tokens";
+  return `${abbreviate(tokens, 1)} tokens`;
 }
 
 export function formatTokenBreakdown(breakdown: TokenBreakdown | null): string {
@@ -91,6 +91,13 @@ export function formatModelName(rawName: string): string {
   }
 
   return rawName;
+}
+
+export function formatContextSize(size: number | null): string {
+  if (size === null || size <= 0) {
+    return "";
+  }
+  return abbreviate(size, 1).replace(/\.0([KM])$/, "$1");
 }
 
 export function abbreviateFishStyle(dirPath: string): string {
