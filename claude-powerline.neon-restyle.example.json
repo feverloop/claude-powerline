@@ -1,0 +1,105 @@
+{
+  "theme": "custom",
+  "display": {
+    "style": "powerline",
+    "charset": "unicode",
+    "colorCompatibility": "truecolor",
+    "autoWrap": false,
+    "padding": 1,
+    "lines": [
+      {
+        "segments": {
+          "directory": { "enabled": true, "style": "full" },
+          "git": {
+            "enabled": true,
+            "showWorkingTree": true,
+            "showRepoName": false,
+            "showSha": false
+          }
+        }
+      },
+      {
+        "segments": {
+          "model": { "enabled": true },
+          "context": {
+            "enabled": true,
+            "displayStyle": "dots",
+            "percentageMode": "used",
+            "showPercentageOnly": true,
+            "autocompactBuffer": 33000
+          },
+          "session": { "enabled": true, "type": "tokens", "costSource": "calculated" },
+          "today": { "enabled": true, "type": "cost" },
+          "metrics": {
+            "enabled": true,
+            "showResponseTime": false,
+            "showLastResponseTime": false,
+            "showDuration": true,
+            "showMessageCount": false,
+            "showLinesAdded": true,
+            "showLinesRemoved": true
+          }
+        }
+      },
+      {
+        "segments": {
+          "jsonFile": [
+            {
+              "enabled": true,
+              "path": "~/.claude/usage.json",
+              "field": "five_hour.utilization",
+              "prefix": "⚡ ",
+              "suffix": "% 5h",
+              "decimalPlaces": 0
+            },
+            {
+              "enabled": true,
+              "path": "~/.claude/usage.json",
+              "field": "five_hour.resets_at",
+              "fieldType": "timeUntil",
+              "prefix": "↻ "
+            },
+            {
+              "enabled": true,
+              "path": "~/.claude/usage.json",
+              "field": "seven_day.utilization",
+              "prefix": "⚡ ",
+              "suffix": "% 7d",
+              "decimalPlaces": 0
+            },
+            {
+              "enabled": true,
+              "path": "~/.claude/usage.json",
+              "field": "seven_day.resets_at",
+              "fieldType": "timeUntil",
+              "prefix": "↻ "
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "colors": {
+    "custom": {
+      "directory":       { "bg": "#1a1100", "fg": "#ffbb00" },
+      "git":             { "bg": "#0d1a0d", "fg": "#00ff41" },
+      "model":           { "bg": "#0d0a1a", "fg": "#c084fc" },
+      "session":         { "bg": "#0d0a1a", "fg": "#c084fc" },
+      "today":           { "bg": "#0d0a1a", "fg": "#c084fc" },
+      "context":         { "bg": "#001122", "fg": "#00d4ff" },
+      "contextWarning":  { "bg": "#1a1100", "fg": "#ffaa00" },
+      "contextCritical": { "bg": "#1a0000", "fg": "#ff3333" },
+      "metrics":         { "bg": "#001122", "fg": "#00d4ff" },
+      "jsonFile":        { "bg": "#001122", "fg": "#00d4ff" },
+      "block":           { "bg": "#001122", "fg": "#00d4ff" },
+      "tmux":            { "bg": "#001122", "fg": "#00d4ff" },
+      "version":         { "bg": "#1a1100", "fg": "#ffbb00" },
+      "env":             { "bg": "#0d1a0d", "fg": "#00ff41" }
+    }
+  },
+  "budget": {
+    "today":   { "amount": 0 },
+    "session": { "amount": 0 },
+    "block":   { "amount": 0 }
+  }
+}
